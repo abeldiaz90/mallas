@@ -1,0 +1,404 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+    .myButton {
+        /*box-shadow: inset 0px 1px 0px 0px #fff6af;*/
+        background: linear-gradient(to bottom, #ffec64 5%, #ff7800 100%);
+        background-color: #ff0000;
+        border-radius: 6px;
+        text-align: center;
+        padding: 1px 16px 0;
+        border: 1px solid #ffaa22;
+        display: inline-block;
+        cursor: pointer;
+        color: #ffffff;
+        font-family: 'Trebuchet MS';
+        font-size: 15px;
+        font-weight: normal;
+        padding: 6px 24px;
+        text-decoration: none;
+        /*text-shadow: 0px 1px 0px #ffee66;*/
+    }
+
+        .myButton:hover {
+            background: linear-gradient(to bottom, #ffab23 5%, #ffec64 100%);
+            background-color: #ffab23;
+            font-weight: bold;
+        }
+
+        .myButton:active {
+            position: relative;
+            top: 1px;
+        }
+
+    .bouncy {
+        animation: bouncy 5s infinite linear;
+        position: relative;
+    }
+
+    .bouncy2 {
+        animation: bouncy 3s infinite linear;
+        position: relative;
+    }
+
+    .btn-group .btn {
+        width: 1px;
+    }
+
+    .btn-group {
+        display: flex;
+        flex-wrap: wrap;
+        margin: 5px;
+    }
+
+    /*
+    input[type="text"] {
+        padding: 5px;
+        outline: none;
+        border: none;
+        width: 200%;
+        border-radius: 15px;
+        display: flex;
+        cursor: text;
+        box-shadow: 6px 6px 10px -1px rgba(0, 0, 0, 0.15), -6px -6px 10px -1px rgba(255, 255, 255, 0.7);
+    }*/
+</style>
+
+
+<div class="container-fluid mt-5">
+    <div class="d-flex justify-content-around">
+        <div class="row col-5">
+            <!---->
+            <label class="form-label" for="Job">Job:</label>
+            <!--<select class="form-select form-control" name="" id="Job"></select>-->
+            <select id="Job" type="text" placeholder="Ingrese Job"></select>
+        </div>
+        <!--
+        <div class="col-3 mt-4  ">
+            <button class="btn btn-primary  d-flex  align-content-center" onclick="Sucesores()"> Sucesores  </button>
+            <button class="btn btn-primary  d-flex  align-content-center" onclick="getDatos()"> Predecesores </button>
+        </div>
+        -->
+        <div class="btn-group col-5 mt-4" style="text-align: center">
+            <button class="myButton btn-group d-flex align-content-center" onclick="Sucesores()"> Sucesores  </button>
+            <button class="myButton btn-group d-flex align-content-center " onclick="getDatos()"> Predecesores </button>
+
+        </div>
+        <!--
+            <div class="col-3  mt-4 ">
+                <button class="btn btn-primary  d-flex  align-content-center" onclick="getDatos()"> Predecesores </button>
+            </div>
+        -->
+    </div>
+    <h2 class="mt-4" id="textoInformativo"></h2>
+    <div id="svgPrint"></div>
+</div>
+
+
+<!--js para usar el select2-->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<!--js para usar el grafico de nodos-->
+<script src="https://d3js.org/d3.v3.min.js"></script>
+<script>
+    var urlAPI = "https://localhost:44379/api/"
+
+    /*
+    combo = $("#Job");
+    combo.html('');
+    $(function () {
+        $.ajax(
+            {
+                dataType: "json",
+                method: "get",
+                url: urlAPI + "listaJobs",
+                async: false,
+                success: function (data) {
+                    $.each(data, function (i, item) {
+                        combo.append('<option value="' + item.jobs + '">' + item.jobs + '</option>');
+                    });
+                }
+            }
+        );
+
+        $(document).ready(function () {
+            $('#Job').select2();
+        });
+
+      });
+    */
+
+    /*
+    $(document).ready(function () {
+        $("#Job").autocomplete({
+            source: function (request, response) {
+                var param = { jobA: $('#Job').val() };
+                console.log(param);
+                $.ajax({
+                    url: urlAPI + "listaJobsAutoComplete?jobA=" + param,
+                    type: "POST",
+                    dataType: "json",
+                    async: false,
+                    data: JSON.stringify(param),
+                    dataFilter: function (data) { return data; },
+                    success: function (data) {
+                        console.log(JSON.stringify(data));
+                        response($.map(data.d, function (item) {
+                            return {
+                                value: item.jobs
+                            }
+                        }))
+                    },
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        var err = eval("(" + XMLHttpRequest.responseText + ")");
+                        alert(err.Message)
+                        // console.log("Ajax Error!");
+                    }
+                })
+            }
+        })*/
+
+    $(document).ready(function () {
+        $('#Job').select2({
+            ajax: {
+                /*url: urlAPI + "listaJobsAutoComplete?jobA=" + param,*/
+                type: "GET",
+                url: urlAPI + "listaJobsAutoComplete",
+                dataType: "json",
+                delay: 300,
+                data: function (params) {
+                    return {
+                        jobA: params.term
+                    }
+                },
+                processResults: function (data) {
+                    var results = [];
+                    $.each(data, function (index, item) {
+                        results.push({
+                            id: item.jobs,
+                            text: item.jobs
+                        })
+                    });
+
+                    return { results: results };
+                },
+                cache: true,
+            },
+
+            placeholder: 'Ingrese su job a buscar...',
+            minimumInputLenght: 3
+
+        });
+    });
+
+    /*
+    $("#Malla").change(function () {
+        var mallaOpcion = $("#Malla").val();
+        combo2.html('');
+        $.ajax({
+            dataType: "json",
+            method: "get",
+            url: urlAPI + "Jobs?malla=" + mallaOpcion,
+            async: false,
+            success: function (data) {
+                $.each(data, function (i, item) {
+                    combo2.append('<option value="' + item + '">' + item.jobs + '</option>');
+                });
+            }
+        });
+    });*/
+
+
+    var margin = { top: 20, right: 120, bottom: 20, left: 120 },
+        canvas_height = 700,
+        canvas_width = 1800
+    tree_width = canvas_width - margin.right - margin.left,
+        tree_height = canvas_height - margin.top - margin.bottom,
+        tree_level_depth = 180;
+
+    var i = 0,
+        duration = 750,
+        root;
+
+    var tree = d3.layout.tree()
+        .size([tree_height, tree_width]);
+
+    var diagonal = d3.svg.diagonal()
+        .projection(function (d) { return [d.y, d.x]; });
+
+    var svg = d3.select("#svgPrint").append("svg")
+        .attr("width", canvas_width)
+        .attr("height", canvas_height)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    function getDatos() {
+        //var mallaOpcion = $("#Malla").val();
+        var jobOpcion = $("#Job").val();
+        $("#textoInformativo").html('');
+        $("#textoInformativo").append('Predecesores');
+        //console.log(mallaOpcion);
+        console.log(jobOpcion);
+        PrintArbol(urlAPI + "PredecesoresT?job=" + jobOpcion);
+        d3.select(self.frameElement).style("height", "auto");
+    }
+
+    //Aumentando linea de código
+    function Sucesores() {
+        //var mallaOpcion = $("#Malla").val();
+        var jobOpcion = $("#Job").val();
+        $("#textoInformativo").html('');
+        $("#textoInformativo").append('Sucesores');
+        //console.log(mallaOpcion);
+        console.log(jobOpcion);
+
+        PrintArbol(urlAPI + "SucesoresT?job=" + jobOpcion);
+        d3.select(self.frameElement).style("height", "auto");
+    }
+
+    function PrintArbol(ruta) {
+        d3.json(ruta, function (error, tree_data) {
+            console.log(tree_data);
+            root = tree_data;
+            root.x0 = tree_height / 2;
+            root.y0 = 0;
+
+            function collapse(d) {
+                if (d.children) {
+                    d._children = d.children;
+                    d._children.forEach(collapse);
+                    d.children = null;
+                }
+            }
+            root.children.forEach(collapse);
+            update(root);
+
+        });
+    }
+
+
+
+
+    function update(source) {
+
+        // Compute the new tree layout.
+        var nodes = tree.nodes(root),
+            links = tree.links(nodes);
+        $("#svgPrint").html('');
+        var linksAltura = links.length;
+        canvas_height = linksAltura * 25
+        if (canvas_height < 700) {
+            canvas_height = 700;
+        }
+
+        canvas_width = 1800;
+        tree_width = canvas_width - margin.right - margin.left;
+        tree_height = canvas_height - margin.top - margin.bottom;
+        tree = d3.layout.tree()
+            .size([tree_height, tree_width]);
+
+        svg = d3.select("#svgPrint").append("svg")
+            .attr("width", canvas_width)
+            .attr("height", canvas_height)
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        root.x0 = tree_height / 2;
+        root.y0 = 0;
+        nodes = tree.nodes(root),
+            links = tree.links(nodes);
+        // Normalize for fixed-depth.
+        nodes.forEach(function (d) { d.y = d.depth * tree_level_depth; });
+
+        // Set unique ID for each node
+        var node = svg.selectAll("g.node")
+            .data(nodes, function (d) { return d.id || (d.id = ++i); });
+
+        // Enter any new nodes at the parent's previous position.
+        var new_nodes = node.enter().append("g")
+            .attr("class", "node")
+            .attr("transform", function (d) { return "translate(" + root.y0 + "," + root.x0 + ")"; })
+            .on("click", click);
+
+        new_nodes.append("circle")
+            .attr("r", 1e-6)
+            .style("fill", function (d) { return d._children ? "lightsteelblue" : "#fff"; });
+
+        new_nodes.append("text")
+            .attr("x", function (d) { return d.children || d._children ? -10 : 10; })
+            .attr("dy", ".35em")
+            .attr("text-anchor", function (d) { return d.children || d._children ? "end" : "start"; })
+            .text(function (d) { return d.name; })
+            .style("fill-opacity", 1e-6);
+
+        // Transition nodes to their new position.
+        var moved_node = node.transition().duration(duration)
+            .attr("transform", function (d) { return "translate(" + d.y + "," + d.x + ")"; });
+        moved_node.select("circle")
+            .attr("r", 4.5)
+            .style("fill", function (d) { return d._children ? "lightsteelblue" : "#fff"; });
+        moved_node.select("text")
+            .style("fill-opacity", 1);
+
+
+        // Transition exiting nodes to the parent's new position.
+        var hidden_nodes = node.exit().transition().duration(duration)
+            .attr("transform", function (d) { return "translate(" + root.y + "," + root.x + ")"; })
+            .remove();
+        hidden_nodes.select("circle")
+            .attr("r", 1e-6);
+        hidden_nodes.select("text")
+            .style("fill-opacity", 1e-6);
+
+
+        // Update the links…
+        var link = svg.selectAll("path.link")
+            .data(links, function (d) { return d.target.id; });
+
+
+        // Enter any new links at the parent's previous position.
+        link.enter().insert("path", "g")
+            .attr("class", "link")
+            .attr("d", function (d) {
+                var o = { x: root.x0, y: root.y0 };
+                return diagonal({ source: o, target: o });
+            })
+            .append("svg:title")
+            .text(function (d, i) { return d.target.edge_name; });
+
+
+
+        //Transition links to their new position.
+        link.transition().duration(duration)
+            .attr("d", diagonal);
+
+        // Transition exiting nodes to the parent's new position.
+        link.exit().transition().duration(duration)
+            .attr("d", function (d) {
+                var o = { x: root.x, y: root.y };
+                return diagonal({ source: o, target: o });
+            })
+            .remove();
+
+
+        // Stash the old positions for transition.
+        nodes.forEach(function (d) {
+            d.x0 = d.x;
+            d.y0 = d.y;
+        });
+    }
+
+    // Toggle children on click.
+    function click(d) {
+        if (d.children) {
+            d._children = d.children;
+            d.children = null;
+        } else {
+            d.children = d._children;
+            d._children = null;
+        }
+        update(d);
+    }
+
+</script>
